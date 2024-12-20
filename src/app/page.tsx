@@ -5,10 +5,12 @@ import { useState } from "react";
 export default function Home() {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setImageUrl(null);
 
     try {
       const response = await fetch("/api/generate-image", {
@@ -16,11 +18,14 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text: inputText }),
+        body: JSON.stringify({ prompt: inputText }),
       });
 
       const data = await response.json();
-      console.log(data);
+      console.log(">>> FINAL RESPONSE", data);
+      if (data.success) {
+        setImageUrl(data.message);
+      }
       setInputText("");
     } catch (error) {
       console.error("Error:", error);
@@ -31,9 +36,11 @@ export default function Home() {
 
   return (
     // TODO: Update the UI here to show the images generated
-    
+
     <div className="min-h-screen flex flex-col justify-between p-8">
-      <main className="flex-1">{/* Main content can go here */}</main>
+      <main className="flex-1">
+        {imageUrl && <img src={imageUrl} alt="Generated image" />}
+      </main>
 
       <footer className="w-full max-w-3xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
