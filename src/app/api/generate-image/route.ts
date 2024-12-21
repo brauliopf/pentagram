@@ -7,6 +7,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { prompt } = body;
 
+    const apiSecret = request.headers.get("X-API-Key");
+
+    if (apiSecret !== process.env.API_KEY) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+
     const url = new URL(
       "https://brauliopf--text-2-image-demo-model-generate-dev.modal.run/"
     );
