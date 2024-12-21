@@ -1,32 +1,45 @@
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
+import crypto from "crypto";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { prompt } = body;
-    let imageUrl = "";
 
-    const API_URL =
-      "https://brauliopf--pentagram-text-to-image-inference-web-dev.modal.run";
+    const url = new URL(
+      "https://brauliopf--text-2-image-demo-model-generate-dev.modal.run/"
+    );
+    url.searchParams.set("prompt", prompt);
 
-    const response = await fetch(`${API_URL}/?seed=7`, {
-      method: "POST",
+    const response = await fetch(url, {
+      method: "GET",
       headers: {
+        "X-API-Key": process.env.API_KEY || "",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ prompt }),
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      imageUrl = `data:${data.image.content_type};base64,${data.image.base64}`;
-    } else {
-      console.error("Error generating image");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Error generating image", errorText);
+      throw new Error(
+        `HTTP Error! status: ${response.status}. message: ${errorText}`
+      );
     }
+
+    // request was successful.  handle image blob
+    const imageBuffer = await response.arrayBuffer();
+    const filename = `${crypto.randomUUID()}.jpg`;
+
+    const blob = await put(filename, imageBuffer, {
+      access: "public",
+      contentType: "image/jpeg",
+    });
 
     return NextResponse.json({
       success: true,
-      message: imageUrl,
+      imageUrl: blob.url,
     });
   } catch (error) {
     return NextResponse.json(

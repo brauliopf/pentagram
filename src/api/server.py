@@ -70,6 +70,11 @@ class Model:
         image = self.pipe(prompt, num_inference_steps=1, guidance_scale=0.0).images[0]
 
         buf = io.BytesIO()
-        image.save(buf, format="PNG")
+        image.save(buf, format="JPEG")
 
-        return Response(content=buf.getvalue(), media_type="image/png")
+        return Response(content=buf.getvalue(), media_type="image/jpeg")
+    
+    @modal.web_endpoint()
+    def health(self):
+        '''Keep the container spinning'''
+        return { 'status': 'OK', 'timestamp': datetime.now(timezone.utc).isoformat()}

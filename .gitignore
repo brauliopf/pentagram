@@ -2,9 +2,11 @@
 sandbox.py
 sandbox.ipynb
 /modal
-server_backup.py
+server_bup.py
 __pycache__
 .venv
+
+package-lock.json
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 

@@ -23,8 +23,9 @@ export default function Home() {
 
       const data = await response.json();
       console.log(">>> FINAL RESPONSE", data);
+
       if (data.success) {
-        setImageUrl(data.message);
+        setImageUrl(data.imageUrl);
       }
       setInputText("");
     } catch (error) {
@@ -39,7 +40,15 @@ export default function Home() {
 
     <div className="min-h-screen flex flex-col justify-between p-8">
       <main className="flex-1">
-        {imageUrl && <img src={imageUrl} alt="Generated image" />}
+        {imageUrl && (
+          <div className="w-full max-w-2x1 rounded-lg shadow-lg overflow-hidden">
+            <img
+              src={imageUrl}
+              alt="Generated image"
+              className="w-full h-auto"
+            />
+          </div>
+        )}
       </main>
 
       <footer className="w-full max-w-3xl mx-auto">
