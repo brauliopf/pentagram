@@ -2,6 +2,7 @@ import modal
 import io
 from fastapi import Response, HTTPException, Query, Request
 from datetime import datetime, timezone
+import requests
 import os
 
 def download_model():
@@ -21,8 +22,8 @@ image = (
         "transformers",
         "accelerate",
         "diffusers",
-        "requests"
-        )
+        "requests",
+    )
     .run_function(download_model)
 )
 
@@ -32,8 +33,7 @@ app = modal.App("text-2-image-demo", image=image)
     image=image,
     secrets=[modal.Secret.from_name("API_KEY")],
     gpu="A10G", # cheap model, with less memory
-    # gpu="H100",
-    timeout=5 * 60, # 5 MINUTES
+    container_idle_timeout=5 * 60, # 5 MINUTES
 )
 class Model:
     @modal.build()
@@ -78,3 +78,21 @@ class Model:
     def health(self):
         '''Keep the container spinning'''
         return { 'status': 'OK', 'timestamp': datetime.now(timezone.utc).isoformat()}
+    
+# Warm-keeping function that runs every 5 minutes
+@app.function(
+    schedule=modal.Cron("*/5 * * * *"),
+    secrets=[modal.Secret.from_name("API_KEY")]
+)
+def keep_warm():
+    health_url = "https://brauliopf--text-2-image-demo-model-health-dev.modal.run/"
+    generate_url = "https://brauliopf--text-2-image-demo-model-generate-dev.modal.run/"
+    
+    # First check health endpoint (no API key needed)
+    health_response = requests.get(health_url)
+    print(f"Health check at: {health_response.json()['timestamp']}")
+    
+    # Then make a test request to generate endpoint with API key
+    headers = {"X-API-Key": os.environ["API_KEY"]}
+    generate_response = requests.get(generate_url, headers=headers)
+    print(f"Generate endpoint tested successfully at: {datetime.now(timezone.utc).isoformat()}")
